@@ -1,0 +1,839 @@
+<!DOCTYPE html>
+<html dir="rtl">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>תעודת משלוח</title>
+    <script src="https://cdn.jsdelivr.net/npm/signature_pad@4.0.0/dist/signature_pad.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <style>
+      /* כל ה-CSS נשאר זהה */
+      @page {
+        margin: 0;
+        size: 148mm 210mm;
+      }
+
+      body {
+        font-family: Arial, sans-serif;
+        unicode-bidi: plaintext;
+        line-height: 1.5;
+        max-width: 100%;
+        padding: 10px;
+        margin: 0;
+        box-sizing: border-box;
+        background-color: white;
+        font-size: 12px;
+        direction: rtl;
+        text-align: right;
+        width: 148mm;
+        height: 210mm;
+        word-spacing: 1px;
+        letter-spacing: 0.5px;
+      }
+
+      .header {
+        display: flex;
+        justify-content: space-between;
+        margin-bottom: 15px;
+        page-break-inside: avoid;
+      }
+
+      .company-details {
+        text-align: right;
+        font-size: 11px;
+        line-height: 1.4;
+        word-spacing: 1px;
+        letter-spacing: 0.5px;
+      }
+
+      .logo-box {
+        text-align: left;
+      }
+
+      .date-and-id {
+        display: flex;
+        justify-content: space-evenly;
+        margin-bottom: 27px;
+        page-break-inside: avoid;
+      }
+
+      .date-and-id input {
+        border: none;
+        border-bottom: 1px dotted #000;
+        font-family: Arial, sans-serif;
+      }
+
+      .form-section {
+        margin-bottom: 20px;
+        page-break-inside: avoid;
+      }
+
+      .form-row {
+        display: flex;
+        gap: 10px;
+        margin-bottom: 8px;
+        flex-wrap: wrap;
+        page-break-inside: avoid;
+      }
+
+      .form-row > div {
+        display: flex;
+        align-items: center;
+        gap: 5px;
+        flex: 1;
+        min-width: 140px;
+      }
+
+      .form-row label {
+        min-width: 40px;
+        white-space: nowrap;
+        display: flex;
+        flex-direction: row-reverse;
+        font-size: 12px;
+        word-spacing: normal;
+      }
+
+      .form-row input {
+        border: none;
+        border-bottom: 1px dotted #000;
+        padding: 2px;
+        font-size: 12px;
+        height: 14px;
+        flex: 1;
+        min-width: 0;
+        text-align: right;
+        font-family: Arial, sans-serif;
+        word-spacing: 1px;
+        letter-spacing: 0.5px;
+      }
+
+      .checkbox-group {
+        display: flex;
+        justify-content: space-between;
+        margin: 15px 0;
+        font-size: 12px;
+        page-break-inside: avoid;
+      }
+
+      .delivery-title {
+        text-align: center;
+        font-weight: bold;
+        font-size: 14px;
+        margin: 20px 0;
+        page-break-before: avoid;
+        page-break-after: avoid;
+      }
+
+      .table {
+        width: 100%;
+        border-collapse: collapse;
+        margin-top: 10px;
+        font-size: 12px;
+        direction: rtl;
+        page-break-inside: avoid;
+      }
+
+      .table th,
+      .table td {
+        border: 1px solid black;
+        padding: 5px;
+        text-align: right;
+      }
+
+      .table input {
+        width: 100%;
+        border: none;
+        background: transparent;
+        padding: 2px;
+        font-size: 12px;
+        text-align: right;
+        direction: rtl;
+        font-family: Arial, sans-serif;
+        word-spacing: 1px;
+        letter-spacing: 0.5px;
+      }
+
+      .signature-section {
+        margin: 20px 0 60px 0;
+        page-break-inside: avoid;
+      }
+
+      #signatureCanvas {
+        width: 100%;
+        height: 100px;
+        border-radius: 3px;
+        background-color: #fff;
+        touch-action: none;
+        border-bottom: 1px dotted #000;
+      }
+
+      .signature-container span {
+        margin-left: 5px;
+      }
+
+      .controls {
+        position: fixed;
+        top: 0;
+        right: 0;
+        background-color: white;
+        padding: 0;
+        box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+        z-index: 1000;
+      }
+
+      .hamburger-btn {
+        background: rgb(92, 92, 255);
+        border: none;
+        font-size: 24px;
+        padding: 10px;
+        cursor: pointer;
+        display: block;
+        width: 100%;
+        text-align: right;
+        color: white;
+      }
+
+      .controls-dropdown {
+        display: none;
+        position: absolute;
+        top: 100%;
+        right: 0;
+        background-color: white;
+        min-width: 160px;
+        box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+        padding: 5px 0;
+      }
+
+      .controls-dropdown.show {
+        display: block;
+      }
+
+      .controls-dropdown button {
+        display: block;
+        width: 100%;
+        padding: 8px 16px;
+        border: none;
+        background: none;
+        text-align: right;
+        font-size: 14px;
+        cursor: pointer;
+      }
+
+      .controls-dropdown button:hover {
+        background-color: #f0f0f0;
+      }
+
+      @media (max-width: 480px) {
+        .controls-dropdown {
+          width: 200px;
+        }
+
+        .controls-dropdown button {
+          padding: 12px 16px;
+        }
+      }
+      @media print {
+        @page {
+          size: 148mm 210mm;
+          margin: 10mm;
+        }
+
+        html,
+        body {
+          width: 128mm;
+          height: 190mm;
+          margin: 0;
+          padding: 0;
+        }
+
+        body {
+          font-family: Arial, sans-serif !important;
+          -webkit-print-color-adjust: exact;
+          print-color-adjust: exact;
+        }
+
+        input {
+          font-family: Arial, sans-serif !important;
+          border-bottom: 1px dotted #000 !important;
+          -webkit-print-color-adjust: exact !important;
+          print-color-adjust: exact !important;
+        }
+
+        .table td,
+        .table th {
+          border: 1px solid black !important;
+        }
+
+        .header,
+        .form-section,
+        .table,
+        .signature-section {
+          page-break-inside: avoid;
+        }
+
+        .controls {
+          display: none !important;
+        }
+      }
+
+      @media (max-width: 480px) {
+        .form-row {
+          flex-wrap: wrap;
+        }
+
+        .form-row input {
+          min-width: 60px;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="header">
+      <div class="logo-box">
+        <img src="logo.png" alt="" />
+      </div>
+      <div class="company-details">
+        <div>עזרא 41/5 רחובות 76208</div>
+        <div>טל. 08-9413126 פקס. 9370407</div>
+        <div>טל' סלולרי: 050-3421746</div>
+        <div>itzikgr@012.net.il</div>
+        <div>עוסק מורשה 052222601</div>
+      </div>
+    </div>
+
+    <div class="form-section">
+      <div class="date-and-id">
+        <div>
+          <span style="font-size: medium">דו"ח שרות מס'</span>
+          <input type="text" id="invoice-number" style="width: 120px" />
+        </div>
+        <div style="display: flex; align-items: center">
+          <span style="padding: 4px">תאריך</span>
+          <input style="width: 85px; font-size: 12px; text-align: center" type="text" id="date" />
+        </div>
+      </div>
+
+      <div class="form-row">
+        <div>
+          <label>לכבוד</label>
+          <input type="text" />
+        </div>
+        <div>
+          <label>כתובת</label>
+          <input type="text" />
+        </div>
+      </div>
+
+      <div class="form-row">
+        <div>
+          <label>טלפון</label>
+          <input type="tel" />
+        </div>
+        <div>
+          <label>הזמנה</label>
+          <input type="text" />
+        </div>
+      </div>
+
+      <div class="form-row">
+        <div>
+          <label>מכונה</label>
+          <input type="text" />
+        </div>
+        <div>
+          <label>מס' מכונה</label>
+          <input type="text" />
+        </div>
+      </div>
+
+      <div class="form-row">
+        <label>דו"ח תיקון</label>
+        <input type="text" style="width: 41px" />
+      </div>
+
+      <div class="form-row">
+        <div>
+          <label>שעות עבודה</label>
+          <input type="text" />
+        </div>
+        <div>
+          <label>מחיר שעות עבודה</label>
+          <input type="text" />
+        </div>
+      </div>
+
+      <div class="checkbox-group">
+        <div>
+          <input type="checkbox" id="warranty" />
+          <label>שרות במסגרת אחריות</label>
+        </div>
+        <div>
+          <input type="checkbox" id="payment" />
+          <label>שרות בתשלום</label>
+        </div>
+      </div>
+
+      <div class="form-row">
+        <div>
+          <label>מקבל העבודה</label>
+          <input type="text" />
+        </div>
+        <div>
+          <label>טכנאי שרות</label>
+          <input type="text" />
+        </div>
+      </div>
+    </div>
+
+    <div class="delivery-title">תעודת משלוח</div>
+    <table class="table">
+      <thead>
+        <tr>
+          <th>כמות</th>
+          <th>פרטים</th>
+          <th>מחיר יח'</th>
+          <th>סכום</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><input type="text" /></td>
+          <td><input type="text" /></td>
+          <td><input type="text" /></td>
+          <td><input type="text" /></td>
+        </tr>
+        <tr>
+          <td><input type="text" /></td>
+          <td><input type="text" /></td>
+          <td><input type="text" /></td>
+          <td><input type="text" /></td>
+        </tr>
+        <tr>
+          <td><input type="text" /></td>
+          <td><input type="text" /></td>
+          <td><input type="text" /></td>
+          <td><input type="text" /></td>
+        </tr>
+        <tr>
+          <td><input type="text" /></td>
+          <td><input type="text" /></td>
+          <td><input type="text" /></td>
+          <td><input type="text" /></td>
+        </tr>
+        <tr>
+          <td><input type="text" /></td>
+          <td><input type="text" /></td>
+          <td><input type="text" /></td>
+          <td><input type="text" /></td>
+        </tr>
+      </tbody>
+    </table>
+
+    <div class="signature-section">
+      <div class="signature-container">
+        <div style="display: flex">
+          <span>חתימת המקבל</span>
+          <canvas id="signatureCanvas"></canvas>
+        </div>
+      </div>
+    </div>
+
+    <div class="controls">
+      <button class="hamburger-btn" onclick="toggleMenu()">☰</button>
+      <div class="controls-dropdown" id="controlsMenu">
+        <button onclick="savePDF()">שמור</button>
+        <button onclick="clearSignature()">נקה חתימה</button>
+        <button onclick="resetForm()">טופס חדש</button>
+        <button onclick="shareForm()">שתף</button>
+      </div>
+    </div>
+
+    <script>
+      let signaturePad;
+      
+      // אתחול הדף
+      window.onload = function () {
+        initializeSignaturePad();
+        setCurrentDate();
+        setServiceNumber();
+        setupEventListeners();
+        setupTableCalculations();
+      };
+
+      function initializeSignaturePad() {
+        const canvas = document.getElementById("signatureCanvas");
+        const ratio = Math.max(window.devicePixelRatio || 1, 1);
+        canvas.width = canvas.offsetWidth * ratio;
+        canvas.height = canvas.offsetHeight * ratio;
+        canvas.getContext("2d").scale(ratio, ratio);
+
+        signaturePad = new SignaturePad(canvas, {
+          backgroundColor: "rgba(255, 255, 255, 0)",
+          penColor: "black",
+          throttle: 16,
+        });
+      }
+
+      function setupEventListeners() {
+        const canvas = document.getElementById("signatureCanvas");
+        
+        // מניעת scroll בזמן חתימה
+        canvas.addEventListener("touchstart", function (e) {
+          e.preventDefault();
+        }, { passive: false });
+
+        canvas.addEventListener("touchmove", function (e) {
+          e.preventDefault();
+        }, { passive: false });
+
+        // שמירת נתוני החתימה לפני שינוי גודל
+        let signatureData = null;
+        window.addEventListener("resize", function() {
+          if (!signaturePad.isEmpty()) {
+            signatureData = signaturePad.toData();
+          }
+          
+          const canvas = document.getElementById("signatureCanvas");
+          const ratio = Math.max(window.devicePixelRatio || 1, 1);
+          canvas.width = canvas.offsetWidth * ratio;
+          canvas.height = canvas.offsetHeight * ratio;
+          canvas.getContext("2d").scale(ratio, ratio);
+          
+          // שחזור החתימה אם הייתה קיימת
+          if (signatureData) {
+            signaturePad.fromData(signatureData);
+          }
+        });
+      }
+
+      function setCurrentDate() {
+        const today = new Date();
+        const dd = String(today.getDate()).padStart(2, "0");
+        const mm = String(today.getMonth() + 1).padStart(2, "0");
+        const yy = String(today.getFullYear()).slice(2);
+        document.getElementById("date").value = `${dd}/${mm}/${yy}`;
+      }
+
+      function generateServiceNumber() {
+        const now = new Date().getTime();
+        return now.toString(36).toUpperCase();
+      }
+
+      function setServiceNumber() {
+        document.getElementById("invoice-number").value = generateServiceNumber();
+      }
+
+      function setupTableCalculations() {
+        document.querySelector(".table").addEventListener("input", function(e) {
+          if (e.target.tagName === "INPUT") {
+            const row = e.target.closest("tr");
+            const inputs = row.querySelectorAll("input");
+            const quantity = parseFloat(inputs[0].value) || 0;
+            const price = parseFloat(inputs[2].value) || 0;
+            inputs[3].value = (quantity * price).toFixed(2);
+          }
+        });
+      }
+
+      // ניקוי החתימה
+      function clearSignature() {
+        signaturePad.clear();
+      }
+
+      // איפוס הטופס
+      function resetForm() {
+        if (confirm("האם אתה בטוח שברצונך לאפס את הטופס?")) {
+          document.getElementById("invoice-number").value = generateServiceNumber();
+          document.querySelectorAll('input:not([type="button"]):not([id="invoice-number"]):not([id="date"])').forEach((input) => {
+            if (input.type === "checkbox") {
+              input.checked = false;
+            } else {
+              input.value = "";
+            }
+          });
+          clearSignature();
+        }
+      }
+
+      async function savePDF() {
+        try {
+          const controls = document.querySelector(".controls");
+          controls.style.display = "none";
+
+          const contentWidth = 595;
+          const contentHeight = 842;
+
+          const canvas = await html2canvas(document.body, {
+            scale: 2,
+            backgroundColor: "#FFFFFF",
+            useCORS: true,
+            allowTaint: true,
+            letterRendering: true,
+            scrollX: 0,
+            scrollY: 0,
+            windowWidth: contentWidth,
+            windowHeight: contentHeight,
+            width: contentWidth,
+            height: contentHeight,
+            onclone: (clonedDoc) => {
+              // טיפול בחתימה
+              const clonedCanvas = clonedDoc.getElementById("signatureCanvas");
+              if (clonedCanvas && !signaturePad.isEmpty()) {
+                const signatureImg = clonedDoc.createElement("img");
+                signatureImg.src = signaturePad.toDataURL("image/png");
+                signatureImg.style.width = "100%";
+                signatureImg.style.height = "100px";
+                clonedCanvas.parentNode.replaceChild(signatureImg, clonedCanvas);
+              }
+
+              // טיפול באינפוטים רגילים (מחוץ לטבלה)
+              clonedDoc.querySelectorAll('input[type="text"]:not(.table input), input[type="tel"]:not(.table input)').forEach((input) => {
+                const div = clonedDoc.createElement("div");
+                div.style.display = "inline-block";
+                div.style.width = input.offsetWidth + "px";
+                div.style.minHeight = "14px";
+                div.style.position = "relative";
+                div.style.borderBottom = "1px dotted #000";
+                div.style.fontFamily = "Arial, sans-serif";
+                div.style.fontSize = "12px";
+                div.style.padding = "2px 4px";
+                div.style.boxSizing = "border-box";
+                div.style.textAlign = "right";
+                div.style.direction = "rtl";
+                div.style.verticalAlign = "bottom";
+                div.textContent = input.value;
+                input.parentNode.replaceChild(div, input);
+              });
+
+              // טיפול בצ'קבוקסים
+              clonedDoc.querySelectorAll('input[type="checkbox"]').forEach((checkbox) => {
+                const span = clonedDoc.createElement("span");
+                span.textContent = checkbox.checked ? "☒" : "☐";
+                span.style.fontSize = "14px";
+                span.style.verticalAlign = "middle";
+                checkbox.parentNode.replaceChild(span, checkbox);
+              });
+
+              // טיפול בטבלה
+              const table = clonedDoc.querySelector(".table");
+              if (table) {
+                table.style.borderCollapse = "collapse";
+                table.style.width = "100%";
+
+                // שמירת הערכים מהאינפוטים
+                const tableValues = [];
+                table.querySelectorAll("tr").forEach((tr) => {
+                  const rowValues = [];
+                  tr.querySelectorAll("input").forEach((input) => {
+                    rowValues.push(input.value);
+                  });
+                  if (rowValues.length > 0) {
+                    tableValues.push(rowValues);
+                  }
+                });
+
+                // טיפול בכותרות
+                table.querySelectorAll("th").forEach((th) => {
+                  th.style.border = "1px solid black";
+                  th.style.padding = "4px 8px";
+                  th.style.backgroundColor = "#ffffff";
+                  th.style.fontSize = "12px";
+                  th.style.fontWeight = "bold";
+                  th.style.height = "20px";
+                });
+
+                // טיפול בתאי הטבלה
+                let rowIndex = 0;
+                table.querySelectorAll("tr").forEach((tr) => {
+                  if (tr.querySelector("td")) {
+                    tr.style.height = "25px";
+
+                    const cells = tr.querySelectorAll("td");
+                    cells.forEach((td, cellIndex) => {
+                      const input = td.querySelector("input");
+                      if (input && tableValues[rowIndex]) {
+                        const span = clonedDoc.createElement("span");
+                        span.textContent = tableValues[rowIndex][cellIndex] || " ";
+                        span.style.display = "block";
+                        span.style.width = "100%";
+
+                        td.innerHTML = "";
+                        td.appendChild(span);
+
+                        td.style.border = "1px solid black";
+                        td.style.padding = "4px 8px";
+                        td.style.height = "25px";
+                        td.style.textAlign = "right";
+                        td.style.direction = "rtl";
+                        td.style.fontSize = "12px";
+                        td.style.fontFamily = "Arial, sans-serif";
+                        td.style.verticalAlign = "middle";
+                      }
+                    });
+                    rowIndex++;
+                  }
+                });
+
+                // הגדרת מינימום רוחב לעמודות
+                table.querySelectorAll("th:first-child, td:first-child").forEach((cell) => {
+                  cell.style.minWidth = "40px";
+                });
+                table.querySelectorAll("th:nth-child(2), td:nth-child(2)").forEach((cell) => {
+                  cell.style.minWidth = "120px";
+                });
+                table.querySelectorAll("th:nth-child(3), td:nth-child(3)").forEach((cell) => {
+                  cell.style.minWidth = "60px";
+                });
+                table.querySelectorAll("th:nth-child(4), td:nth-child(4)").forEach((cell) => {
+                  cell.style.minWidth = "60px";
+                });
+              }
+
+              clonedDoc.querySelector(".controls")?.remove();
+            },
+          });
+
+          const { jsPDF } = window.jspdf;
+          const pdf = new jsPDF({
+            orientation: "portrait",
+            unit: "mm",
+            format: "a5",
+            putOnlyUsedFonts: true,
+            compress: true,
+            hotfixes: ["px_scaling"],
+          });
+
+          const imgData = canvas.toDataURL("image/jpeg", 1.0);
+          pdf.addImage(imgData, "JPEG", 0, 0, 148, 210, undefined, "FAST");
+
+          pdf.save("תעודת_משלוח.pdf");
+          controls.style.display = "flex";
+        } catch (error) {
+          console.error("שגיאה בשמירת PDF:", error);
+          alert("אירעה שגיאה בשמירת הקובץ");
+          controls.style.display = "flex";
+        }
+      }
+
+      async function shareForm() {
+        try {
+          const canShare = navigator.share && navigator.canShare;
+          const isMobile = /Android|webOS|iPhone|iPad|iPod/i.test(navigator.userAgent);
+
+          if (canShare && isMobile) {
+            const controls = document.querySelector(".controls");
+            controls.style.display = "none";
+
+            const { jsPDF } = window.jspdf;
+            const pdf = new jsPDF({
+              orientation: "portrait",
+              unit: "mm",
+              format: "a5",
+              putOnlyUsedFonts: true,
+              compress: true,
+              hotfixes: ["px_scaling"],
+            });
+
+            const canvas = await html2canvas(document.body, {
+              scale: 2,
+              backgroundColor: "#FFFFFF",
+              useCORS: true,
+              allowTaint: true,
+              letterRendering: true,
+              scrollX: 0,
+              scrollY: 0,
+              windowWidth: 595,
+              windowHeight: 842,
+              width: 595,
+              height: 842,
+              onclone: handleClonedDocument,
+            });
+
+            const imgData = canvas.toDataURL("image/jpeg", 1.0);
+            pdf.addImage(imgData, "JPEG", 0, 0, 148, 210, undefined, "FAST");
+
+            const pdfBlob = pdf.output("blob");
+            const file = new File([pdfBlob], "תעודת_משלוח.pdf", { type: "application/pdf" });
+
+            try {
+              await navigator.share({
+                files: [file],
+                title: "תעודת משלוח",
+              });
+            } catch (shareError) {
+              await navigator.share({
+                title: "תעודת משלוח",
+                text: "תעודת משלוח",
+              });
+            }
+
+            controls.style.display = "flex";
+          } else {
+            savePDF();
+          }
+        } catch (error) {
+          console.error("שגיאה בשיתוף:", error);
+          savePDF();
+        }
+      }
+
+      function handleClonedDocument(clonedDoc) {
+        // טיפול בחתימה
+        const clonedCanvas = clonedDoc.getElementById("signatureCanvas");
+        if (clonedCanvas && !signaturePad.isEmpty()) {
+          const signatureImg = clonedDoc.createElement("img");
+          signatureImg.src = signaturePad.toDataURL("image/png");
+          signatureImg.style.width = "100%";
+          signatureImg.style.height = "100px";
+          clonedCanvas.parentNode.replaceChild(signatureImg, clonedCanvas);
+        }
+
+        // טיפול באינפוטים רגילים (מחוץ לטבלה)
+        clonedDoc.querySelectorAll('input[type="text"]:not(.table input), input[type="tel"]:not(.table input)').forEach((input) => {
+          const div = clonedDoc.createElement("div");
+          div.style.display = "inline-block";
+          div.style.width = input.offsetWidth + "px";
+          div.style.minHeight = "14px";
+          div.style.position = "relative";
+          div.style.borderBottom = "1px dotted #000";
+          div.style.fontFamily = "Arial, sans-serif";
+          div.style.fontSize = "12px";
+          div.style.padding = "2px 4px";
+          div.style.boxSizing = "border-box";
+          div.style.textAlign = "right";
+          div.style.direction = "rtl";
+          div.style.verticalAlign = "bottom";
+          div.textContent = input.value;
+          input.parentNode.replaceChild(div, input);
+        });
+
+        // טיפול בצ'קבוקסים
+        clonedDoc.querySelectorAll('input[type="checkbox"]').forEach((checkbox) => {
+          const span = clonedDoc.createElement("span");
+          span.textContent = checkbox.checked ? "☒" : "☐";
+          span.style.fontSize = "14px";
+          span.style.verticalAlign = "middle";
+          checkbox.parentNode.replaceChild(span, checkbox);
+        });
+
+        // הסרת כפתורי שליטה
+        clonedDoc.querySelector(".controls")?.remove();
+      }
+
+      function toggleMenu() {
+        document.getElementById("controlsMenu").classList.toggle("show");
+      }
+
+      // סגירת תפריט בלחיצה מחוץ לתפריט
+      document.addEventListener("click", function (event) {
+        const menu = document.getElementById("controlsMenu");
+        const hamburger = document.querySelector(".hamburger-btn");
+        if (!menu.contains(event.target) && !hamburger.contains(event.target)) {
+          menu.classList.remove("show");
+        }
+      });
+    </script>
+  </body>
+</html>
